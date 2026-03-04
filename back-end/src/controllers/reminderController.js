@@ -1,11 +1,11 @@
-const Task = require('../models/Task')
-const TaskSeries = require('../models/TaskSeries')
+const Reminder = require('../models/reminder')
+const ReminderSeries = require('../models/reminderSeries')
 
 // Delete a single instance only
 exports.deleteOne = async (req, res) => {
   try {
-    await Task.findByIdAndUpdate(req.params.id, { deleted: true })
-    res.json({ message: 'Task instance deleted' })
+    await Reminder.findByIdAndUpdate(req.params.id, { deleted: true })
+    res.json({ message: 'Reminder instance deleted' })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -16,27 +16,27 @@ exports.deleteSeries = async (req, res) => {
   try {
     const { seriesId } = req.params
     // Soft delete all instances in the series
-    await Task.updateMany({ seriesId }, { deleted: true })
+    await Reminder.updateMany({ seriesId }, { deleted: true })
     // Also remove the series itself
-    await TaskSeries.findByIdAndDelete(seriesId)
+    await ReminderSeries.findByIdAndDelete(seriesId)
     res.json({ message: 'Entire series deleted' })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
 }
 
-// Get all tasks (excluding soft-deleted ones)
-exports.getAllTasks = async (req, res) => {
+// Get all reminders (excluding soft-deleted ones)
+exports.getAllReminders = async (req, res) => {
   try {
-    const tasks = await Task.find({ userId: req.user.id, deleted: false })
-    res.json(tasks)
+    const reminders = await Reminder.find({ deleted: false })
+    res.json(reminders)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
 }
 
-// Create a task — with optional repeat
-exports.createTask = async (req, res) => {
+// Create a reminder — with optional repeat
+exports.createReminder = async (req, res) => {
   try {
     const { title, description, dueDate, repeat } = req.body
     const isRepeating = repeat && repeat.frequency !== 'none'
@@ -44,17 +44,17 @@ exports.createTask = async (req, res) => {
     let seriesId = null
 
     if (isRepeating) {
-      const series = await TaskSeries.create({ title, description, repeat })
+      const series = await ReminderSeries.create({ title, description, repeat })
       seriesId = series._id
 
       // Generate instances for the next 90 days
       const instances = generateInstances({ title, description, dueDate, repeat, seriesId })
-      await Task.insertMany(instances)
-      return res.status(201).json({ message: 'Repeating task series created', seriesId })
+      await Reminder.insertMany(instances)
+      return res.status(201).json({ message: 'Repeating reminder series created', seriesId })
     }
 
-    const task = await Task.create({ ...req.body, userId: req.user.id })
-    res.status(201).json(task)
+    const reminder = await Reminder.create({ title, description, dueDate, seriesId: null })
+    res.status(201).json(reminder)
 
   } catch (err) {
     res.status(500).json({ error: err.message })
