@@ -1,20 +1,28 @@
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
+const express    = require('express')
+const cors       = require('cors')
+const cookieParser = require('cookie-parser')
 
-const taskRoutes = require("./routes/taskRoutes");
-const errorHandler = require("./middleware/errorHandler");
+const authRoutes     = require('./routes/authRoutes')
+const taskRoutes     = require('./routes/taskRoutes')
+const eventRoutes    = require('./routes/eventRoutes')
+const reminderRoutes = require('./routes/reminderRoutes')
 
-const app = express();
+const app = express()
 
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-app.use(morgan("dev"));
+app.use(express.json())
+app.use(cookieParser())
+app.use(cors({
+  origin: 'http://localhost:5173',  // your React dev server
+  credentials: true                 // required for cookies to work cross-origin
+}))
 
-app.use("/api/tasks", taskRoutes);
+// Public routes
+app.use('/api/auth', authRoutes)
 
-app.use(errorHandler);
+// Protected routes — must be logged in
+const protect = require('./middleware/protect')
+app.use('/api/tasks',     protect, taskRoutes)
+app.use('/api/events',    protect, eventRoutes)
+app.use('/api/reminders', protect, reminderRoutes)
 
-module.exports = app;
+module.exports = app
