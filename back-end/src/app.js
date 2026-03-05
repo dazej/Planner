@@ -1,6 +1,8 @@
-const express    = require('express')
-const cors       = require('cors')
-const cookieParser = require('cookie-parser')
+const express       = require('express')
+const cors          = require('cors')
+const cookieParser  = require('cookie-parser')
+const session       = require('express-session')
+const passport      = require('./config/passport')
 
 const authRoutes     = require('./routes/authRoutes')
 const taskRoutes     = require('./routes/taskRoutes')
@@ -15,6 +17,15 @@ app.use(cors({
   origin: 'http://localhost:5173',  // your React dev server
   credentials: true                 // required for cookies to work cross-origin
 }))
+
+// Session is required for Passport's OAuth state during the Google redirect/callback flow
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}))
+app.use(passport.initialize())
+app.use(passport.session())
 
 // Public routes
 app.use('/api/auth', authRoutes)

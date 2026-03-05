@@ -2,15 +2,17 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 
 const userSchema = new mongoose.Schema({
-  name:      { type: String, required: true, trim: true },
-  email:     { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password:  { type: String, required: true, minlength: 8 },
-  createdAt: { type: Date, default: Date.now }
+  name:       { type: String, required: true, trim: true },
+  email:      { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password:   { type: String, minlength: 8 },    // optional — OAuth users won't have one
+  provider:   { type: String, default: 'local' }, // 'local' | 'google'
+  providerId: { type: String },                   // Google user ID
+  createdAt:  { type: Date, default: Date.now }
 })
 
-// Hash password before saving
+// Hash password before saving (only if a password is set)
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next()
+  if (!this.password || !this.isModified('password')) return next()
   this.password = await bcrypt.hash(this.password, 12)
   next()
 })
