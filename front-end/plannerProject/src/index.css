@@ -66,3 +66,65 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* ── Topbar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.04em;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #555;
+  color: #aaa;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  border-color: #646cff;
+  color: #fff;
+}
+
+/* Profile icon — circle with user initial */
+.profile-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #646cff;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.profile-icon-btn:hover {
+  background: #535bf2;
+}
