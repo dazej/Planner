@@ -75,9 +75,25 @@ exports.login = async (req, res) => {
 }
 
 // LOGOUT
-exports.logout = (req, res) => {
+exports.logout = (_req, res) => {
   res.cookie('token', '', { httpOnly: true, expires: new Date(0) })
   res.json({ message: 'Logged out' })
+}
+
+// GOOGLE OAUTH CALLBACK
+// Called after Google redirects back — Passport has already found/created the user
+exports.googleCallback = (req, res) => {
+  const token = generateToken(req.user._id)
+
+  // sameSite must be 'lax' (not 'strict') so the cookie is sent on the redirect from Google
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  })
+
+  res.redirect(process.env.CLIENT_URL + '/dashboard')
 }
 
 // GET CURRENT USER

@@ -1,5 +1,5 @@
-const Task = require('../models/Task')
-const TaskSeries = require('../models/TaskSeries')
+const Task = require('../models/tasks')
+const TaskSeries = require('../models/tasksSeries')
 
 // Delete a single instance only
 exports.deleteOne = async (req, res) => {
@@ -48,7 +48,7 @@ exports.createTask = async (req, res) => {
       seriesId = series._id
 
       // Generate instances for the next 90 days
-      const instances = generateInstances({ title, description, dueDate, repeat, seriesId })
+      const instances = generateInstances({ title, description, dueDate, repeat, seriesId, userId: req.user.id })
       await Task.insertMany(instances)
       return res.status(201).json({ message: 'Repeating task series created', seriesId })
     }
@@ -62,14 +62,14 @@ exports.createTask = async (req, res) => {
 }
 
 // Helper — generates date instances based on repeat rules
-function generateInstances({ title, description, dueDate, repeat, seriesId }) {
+function generateInstances({ title, description, dueDate, repeat, seriesId, userId }) {
   const instances = []
   const start = new Date(dueDate)
   const end = repeat.endsOn ? new Date(repeat.endsOn) : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
   let current = new Date(start)
 
   while (current <= end) {
-    instances.push({ title, description, dueDate: new Date(current), seriesId })
+    instances.push({ title, description, dueDate: new Date(current), seriesId, userId })
 
     if (repeat.frequency === 'daily')   current.setDate(current.getDate() + repeat.interval)
     if (repeat.frequency === 'weekly')  current.setDate(current.getDate() + 7 * repeat.interval)

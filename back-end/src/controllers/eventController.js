@@ -25,10 +25,10 @@ exports.deleteSeries = async (req, res) => {
   }
 }
 
-// Get all events (excluding soft-deleted ones)
+// Get all events for the logged-in user (excluding soft-deleted ones)
 exports.getAllEvents = async (req, res) => {
   try {
-    const events = await Event.find({ deleted: false })
+    const events = await Event.find({ userId: req.user.id, deleted: false })
     res.json(events)
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -38,7 +38,7 @@ exports.getAllEvents = async (req, res) => {
 // Create an event — with optional repeat
 exports.createEvent = async (req, res) => {
   try {
-    const { title, description, dueDate, repeat } = req.body
+    const { title, description, startDate, repeat } = req.body
     const isRepeating = repeat && repeat.frequency !== 'none'
 
     let seriesId = null
@@ -48,12 +48,12 @@ exports.createEvent = async (req, res) => {
       seriesId = series._id
 
       // Generate instances for the next 90 days
-      const instances = generateInstances({ title, description, dueDate, repeat, seriesId })
+      const instances = generateInstances({ title, description, startDate, repeat, seriesId, userId: req.user.id })
       await Event.insertMany(instances)
       return res.status(201).json({ message: 'Repeating event series created', seriesId })
     }
 
-    const event = await Event.create({ title, description, dueDate, seriesId: null })
+    const event = await Event.create({ title, description, startDate, seriesId: null, userId: req.user.id })
     res.status(201).json(event)
 
   } catch (err) {
@@ -62,14 +62,14 @@ exports.createEvent = async (req, res) => {
 }
 
 // Helper — generates date instances based on repeat rules
-function generateInstances({ title, description, dueDate, repeat, seriesId }) {
+function generateInstances({ title, description, startDate, repeat, seriesId, userId }) {
   const instances = []
-  const start = new Date(dueDate)
+  const start = new Date(startDate)
   const end = repeat.endsOn ? new Date(repeat.endsOn) : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
   let current = new Date(start)
 
   while (current <= end) {
-    instances.push({ title, description, dueDate: new Date(current), seriesId })
+    instances.push({ title, description, startDate: new Date(current), seriesId, userId })
 
     if (repeat.frequency === 'daily')   current.setDate(current.getDate() + repeat.interval)
     if (repeat.frequency === 'weekly')  current.setDate(current.getDate() + 7 * repeat.interval)
